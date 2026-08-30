@@ -94,6 +94,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     ArrayList<Ball> bullets = new ArrayList<>();
     
+    ArrayList<SpikeTraps> spikes = new ArrayList <>();
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
@@ -104,11 +105,13 @@ public class GamePanel extends JPanel implements Runnable {
         
         this.gameState = startState;
 
-        platforms.add(new Platform(0, 500, 600, 30, 0));
+        //platforms.add(new Platform(0, 500, 600, 30, 0));
+        platforms.add(new VPlatform(0, 500, 600, 30, 180,0));
         gEnemy.add(new GroundEnemy(0, 280, 10));
         platforms.add(new Platform(200, 380, 140, 20, 0));
         platforms.add(new Platform(400, 280, 140, 20, 0));
         platforms.add(new Platform(700, 480, 400, 30, 0));
+        spikes.add(new SpikeTraps(400, 280, 140, 1));
 
         platforms.add(new BlockingWall(1150, 350, 30, 180, 6, true));
         platforms.add(new AvoidingPlatform(1250, 420, 100, 20, 6));
@@ -149,7 +152,7 @@ public class GamePanel extends JPanel implements Runnable {
         platforms.add(new MovingPlatform(7400, 320, 160, 25, 200, 4));
         
         platforms.add(new Platform(7700, 450, 500, 40, 0));
-
+        
         grabHook.add(new Hook(600, 100));
         grabHook.add(new Hook(1350, 120));
         grabHook.add(new Hook(2100, 150));
@@ -160,7 +163,7 @@ public class GamePanel extends JPanel implements Runnable {
         grabHook.add(new Hook(5750, 90));
         grabHook.add(new Hook(6700, 120));
         grabHook.add(new Hook(7350, 80));
-
+		/*
         bullets.add(new Ball(8200/2, -300, 18, 2));
         bullets.add(new Ball(8500, -300, 14, 2));
         bullets.add(new Ball(8800, -300, 24, 2));
@@ -170,7 +173,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         bullets.add(new Ball(-400, 320, 18, 3));
         bullets.add(new Ball(-900, 200, 16, 3));
-
+		*/
         
         
         playerImg = ResourceLoader.loadImage("/south.png");
@@ -368,6 +371,16 @@ public class GamePanel extends JPanel implements Runnable {
                 ((MovingPlatform) p).update();
             }
         }
+        
+        for (int i = platforms.size() - 1; i >= 0; i--) {
+            Platform p = platforms.get(i);
+            if (p instanceof VPlatform) {
+                VPlatform vp = (VPlatform) p;
+                if (vp.update()) {
+                    platforms.remove(i);
+                }
+            }
+        }
 
         if (keyH.leftPressed && playerX > 0) {
             playerFacingDirection = -1;
@@ -417,7 +430,9 @@ public class GamePanel extends JPanel implements Runnable {
         } else {
             directionImg = playerImg; 
         }
+        
 
+        	
         Rectangle playerBounds = getPlayerBounds();
         for (Platform p : platforms) {
             Rectangle pBounds = p.getBounds();
@@ -431,6 +446,8 @@ public class GamePanel extends JPanel implements Runnable {
                         moveHorizontally(((AvoidingPlatform) p).speed);
                     } else if (p instanceof MovingPlatform ) {
                         moveHorizontally(((MovingPlatform) p).speed);
+                    }else if (p instanceof VPlatform) {
+                    	((VPlatform) p).isPlayerStandingOn = true;
                     }
                 }
             }
@@ -558,8 +575,17 @@ public class GamePanel extends JPanel implements Runnable {
                 gEnemy.remove(i);
             }
         }
+        for(SpikeTraps spike: spikes) {
+        	spike.update();
+        	if (getPlayerBounds().intersects(spike.getBounds())) {
+                playerTookDamage();
+        }
     }
-
+        if (currentHealth <= 0) {
+        	playHit("/gameOver.wav");
+            gameState = gameOverState;
+        }
+    }
     public void respawnOnNextPlatformLeft() {
         Platform targetPlatform = null;
         int closestX = -1; 
@@ -634,9 +660,12 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         g2.translate(-cameraX, 0);
+        for(SpikeTraps spike: spikes) {
+        	spike.draw(g2);
+        }
 
         for (Platform p : platforms) {
-            if (p instanceof AvoidingPlatform || p instanceof BlockingWall|| p instanceof MovingPlatform) {
+            if (p instanceof AvoidingPlatform || p instanceof BlockingWall|| p instanceof MovingPlatform || p instanceof VPlatform) {
                 p.draw(g2);
             } else if (platformImg != null) {
                 g2.drawImage(platformImg, p.x, p.y, p.width, p.height, null);
