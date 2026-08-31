@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 public class Platform {
 
     public int x, y, width, height,speed;
+    public int velocityX,velocityY;
 
     public Platform(int x, int y, int width, int height, int speed) {
         this.x = x;
