@@ -111,7 +111,7 @@ public class GamePanel extends JPanel implements Runnable {
         platforms.add(new Platform(200, 380, 140, 20, 0));
         platforms.add(new Platform(400, 280, 140, 20, 0));
         spikes.add(new SpikeTraps(400, 280, 140, 1));
-        platforms.add(new SmashingP(500, -100, screenWidth/3, screenHeight/2, 3, 500, 30)); // Zielwert auf 500 angepasst
+       
         platforms.add(new Platform(700, 480, 400, 30, 0));
 
         platforms.add(new BlockingWall(1150, 350, 30, 180, 6, true));
@@ -208,7 +208,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 
         // ==================== PROJECTILE BULLETS (ANPASSUNG AN DIE WEITERE WELT) ====================
-       /* bullets.add(new Ball(4100, -300, 18, 2));
+        bullets.add(new Ball(4100, -300, 18, 2));
         bullets.add(new Ball(8200/2, -300, 18, 2));
         bullets.add(new Ball(8500, -300, 14, 2));
         bullets.add(new Ball(8800, -300, 24, 2));
@@ -218,7 +218,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         bullets.add(new Ball(-400, 320, 18, 3));
         bullets.add(new Ball(-900, 200, 16, 3));
-        */
+        
         
         playerImg = ResourceLoader.loadImage("/south.png");
         playerImgRight = ResourceLoader.loadImage("/east.png");
@@ -314,7 +314,7 @@ public class GamePanel extends JPanel implements Runnable {
             return false;
         }
         currentHealth--;
-        playHit("/scream.wav");
+        playHit("/scream2.wav");
         playerDmgTimer = 60; 
         return true;
     }
@@ -363,7 +363,7 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         if (gameState == startState) {
-            if (keyH.upPressed) {
+            if (keyH.dashPressed) {
             	playHit("/restart.wav");
                 resetGame();
             }
@@ -424,7 +424,7 @@ public class GamePanel extends JPanel implements Runnable {
             	        if (sp.isSmashingDown()) {
             	            currentHealth = 0; 
             	            msg.showFloatingMessage("Du bist Matsche");
-            	            playHit("/scream.wav");
+            	            playHit("/scream2.wav");
             	            gameState = gameOverState;
             	        }
             	    }

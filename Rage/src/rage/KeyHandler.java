@@ -18,24 +18,24 @@ public class KeyHandler implements KeyListener {
         int code = e.getKeyCode();
 
         // W / Pfeil nach oben
-        if (code == KeyEvent.VK_SPACE) {
+        if (code == KeyEvent.VK_W) {
             upPressed = true;
         }
         // S / Pfeil nach unten
-        if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN) {
+        if (code == KeyEvent.VK_S) {
             downPressed = true;
         }
         // A / Pfeil nach links
-        if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT) {
+        if (code == KeyEvent.VK_A) {
             leftPressed = true;
         }
         // D / Pfeil nach rechts
-        if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT) {
+        if (code == KeyEvent.VK_D) {
             rightPressed = true;
             
         }
         // Enter zum Dashen
-        if (code == KeyEvent.VK_I) {
+        if (code == KeyEvent.VK_SPACE) {
             dashPressed = true;
         }
         // R zum Spiel restart
@@ -51,7 +51,7 @@ public class KeyHandler implements KeyListener {
            swordPressed = true;
         }
      // g zum interagieren
-        if (code == KeyEvent.VK_L) {
+        if (code == KeyEvent.VK_I) {
            gPressed = true;
         }
         
@@ -63,19 +63,19 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_R) {
             restartPressed = false;
         }
-        if (code == KeyEvent.VK_SPACE) {
+        if (code == KeyEvent.VK_W) {
             upPressed = false;
         }
-        if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN) {
+        if (code == KeyEvent.VK_S ) {
             downPressed = false;
         }
-        if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT) {
+        if (code == KeyEvent.VK_A ) {
             leftPressed = false;
         }
-        if (code == KeyEvent.VK_I) {
+        if (code == KeyEvent.VK_SPACE) {
             dashPressed = false;
         }
-        if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT) {
+        if (code == KeyEvent.VK_D ) {
             rightPressed = false;
         }
      // F Drücken zum schießen
@@ -87,7 +87,7 @@ public class KeyHandler implements KeyListener {
            swordPressed = false;
         }
      // g zum interagieren
-        if (code == KeyEvent.VK_L) {
+        if (code == KeyEvent.VK_I) {
            gPressed = false;
         }
     }
