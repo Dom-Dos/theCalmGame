@@ -424,7 +424,7 @@ public class GamePanel extends JPanel implements Runnable {
             	        if (sp.isSmashingDown()) {
             	            currentHealth = 0; 
             	            msg.showFloatingMessage("Du bist Matsche");
-            	            playHit("/scream2.wav");
+            	            playHit("/angryStone.wav");
             	            gameState = gameOverState;
             	        }
             	    }

@@ -2,6 +2,7 @@ package rage;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
 public class SmashingP extends Platform {
     int moveTo;
@@ -11,6 +12,9 @@ public class SmashingP extends Platform {
     int startTimer;
     private int velocityY; 
     int direction;
+    BufferedImage stoneface;
+    
+  
 
     public SmashingP(int x, int y, int width, int height, int speed, int moveTo, int timer) {
         super(x, y, width, height, speed);
@@ -24,6 +28,10 @@ public class SmashingP extends Platform {
         this.startTimer = timer;
         this.startY = y;
         this.velocityY = 0;
+        
+   
+    	stoneface = ResourceLoader.loadImage("/stoneface.png");
+ 
     }
 
     private enum State {
@@ -80,8 +88,13 @@ public class SmashingP extends Platform {
 
     @Override
     public void draw(Graphics2D g2) {
+    	
+    	if (stoneface!= null) {
+    	g2.drawImage(stoneface, x, y, width, height,null);
+    	}else {
         g2.setColor(Color.RED);
         g2.fillRect(x, y, width, height);
+    	}
     }
 
     public boolean isSmashingDown() {
