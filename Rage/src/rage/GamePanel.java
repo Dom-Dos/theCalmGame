@@ -17,6 +17,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int playState = 1;
     public final int gameOverState = 2;
     public final int startState = 3;
+    public final int keyBindState = 4;
 
     public int maxHealth = 5;
     public int currentHealth = maxHealth;
@@ -52,7 +53,9 @@ public class GamePanel extends JPanel implements Runnable {
     Sound hit = new Sound();
 
     KeyHandler keyH = new KeyHandler();
-
+    OptButtons oB = new OptButtons(this, keyH);
+    public int highlightIndex = 1;
+    public int delayMenuButtons = 0;
     Message msg = new Message(this);
 
     public int maxLife = 3;
@@ -363,9 +366,32 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         if (gameState == startState) {
-            if (keyH.dashPressed) {
+            if (keyH.menuContinue) {
             	playHit("/restart.wav");
                 resetGame();
+            }
+            if(keyH.interactPressed) {
+            	gameState = keyBindState;
+            }
+            return;
+        }
+        if(gameState == keyBindState) {
+        	delayMenuButtons --;
+            if(keyH.menuDown && highlightIndex < 7 && delayMenuButtons <= 0) {
+                highlightIndex += 1;
+                delayMenuButtons = 10;
+            }
+            if(keyH.menuUp && highlightIndex >= 2 && delayMenuButtons <= 0) {
+                highlightIndex -= 1;
+                delayMenuButtons = 10;
+            }
+            if(keyH.menuContinue && delayMenuButtons <= 0) {
+                oB.rebindKey(highlightIndex);
+                keyH.interactPressed = false; 
+                delayMenuButtons = 10;
+            }
+            if(keyH.menuBack && delayMenuButtons <= 0) {
+                gameState = startState;
             }
             return;
         }
@@ -375,10 +401,10 @@ public class GamePanel extends JPanel implements Runnable {
                 if (gh.getDistance(playerX, playerY) <= 300) {
                     msg.showFloatingMessage("-I-");
 
-                    if (keyH.gPressed) {
+                    if (keyH.interactPressed) {
                         currentHook = gh;
                         isHooked = true;
-                        keyH.gPressed = false; 
+                        keyH.interactPressed = false; 
                         break;
                     }
                 }
@@ -776,6 +802,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
         if (gameState == startState) {
         	msg.startScreen(g2);
+        }
+        if (gameState == keyBindState) {
+        	oB.optionScreen(g2, highlightIndex);
+        	
         }
         g2.dispose();
     }

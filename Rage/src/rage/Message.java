@@ -80,14 +80,8 @@ public class Message {
     	Center(g2, "Press space to start", gp.screenHeight / 2 -80, fontTitle, Color.CYAN, false);
         Center(g2, "The Calm game", gp.screenHeight / 2 - 40, fontTitle, Color.white, false);
         Center(g2, "--------------", gp.screenHeight / 2 , fontTitle, Color.white, false);
-        Center(g2, "Controls", gp.screenHeight / 2 + 60, fontTitle, Color.RED, false);
-        Center(g2, "Right = D", gp.screenHeight / 2 + 90, fontTitle, Color.RED, false);
-        Center(g2, "Left = A ", gp.screenHeight / 2 + 120, fontTitle, Color.RED, false);
-        Center(g2, "Jump = W", gp.screenHeight / 2 + 150, fontTitle, Color.RED, false);
-        Center(g2, "Sword = J", gp.screenHeight / 2 + 180, fontTitle, Color.RED, false);
-        Center(g2, "Fireball = K", gp.screenHeight / 2 + 210, fontTitle, Color.RED, false);
-        Center(g2, "Dash = Space", gp.screenHeight / 2 + 240, fontTitle, Color.RED, false);
-        Center(g2, "Interact = I", gp.screenHeight / 2 + 270, fontTitle, Color.RED, false);
+        Center(g2, "Controls open = I", gp.screenHeight / 2 + 60, fontTitle, Color.RED, false);
+
     }
     public void drawTitlePicture(Graphics2D g2) {
     	titlePicture = ResourceLoader.loadImage("/BGP1.jpg");
