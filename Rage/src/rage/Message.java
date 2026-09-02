@@ -53,7 +53,7 @@ public class Message {
     
     String[] options =  new String[] {
     		"Controls",
-    		"Sound options",
+    		"Sound options-Not Available",
     		"Start Game"
     };
 

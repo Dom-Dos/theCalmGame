@@ -46,7 +46,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int screenWidth = tileSize * maxScreenCol;
     public final int screenHeight = tileSize * maxScreenRow;
 
-    private final int FPS = 60;
+    private int FPS = 60;
     private Thread gameThread;
     
     Sound music = new Sound();
@@ -320,17 +320,20 @@ public class GamePanel extends JPanel implements Runnable {
         currentHealth--;
         playHit("/scream2.wav");
         playerDmgTimer = 60; 
+        delayGame = 30;
         return true;
     }
-
+    public int delayGame = 60;
     @Override
     public void run() {
-        double drawInterval = 1000000000 / (double) FPS;
+    	
+        
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
 
         while (gameThread != null) {
+        	double drawInterval = 1000000000 / (double) FPS;
             currentTime = System.nanoTime();
             delta += (currentTime - lastTime) / drawInterval;
             lastTime = currentTime;
@@ -339,6 +342,14 @@ public class GamePanel extends JPanel implements Runnable {
                 update();
                 repaint();
                 delta--;
+                delayGame --;
+           	 if (delayGame <= 0) {
+                	FPS = 60;
+                }else if (delayGame > 0) {
+                	
+                	FPS = 30;
+                	System.out.println("Delay");
+                }
             }
         }
     }
@@ -349,6 +360,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void update() {
         playerDmgTimer --;
+        
+        
+       
         if (shootCooldown > 0) {
             shootCooldown--;
         }
@@ -379,11 +393,13 @@ public class GamePanel extends JPanel implements Runnable {
         	delayMenuButtons --;
         	if (keyH.menuUp && 2 <= highlightMenu && delayMenuButtons <=0) {
         		highlightMenu -=1;
+        		playHit("/up_down.wav");
         		System.out.println(highlightMenu);
         		delayMenuButtons = 10;
         	}
         	if (keyH.menuDown && msg.options.length > highlightMenu && delayMenuButtons <=0) {
         		highlightMenu +=1;
+        		playHit("/up_down.wav");
         		System.out.println(highlightMenu);
         		delayMenuButtons = 10;
         	}
@@ -397,6 +413,7 @@ public class GamePanel extends JPanel implements Runnable {
         			break;
         		case(3):
         			gameState = playState;
+        		delayGame = 60;
         			break;
         		}
         	}
@@ -407,10 +424,12 @@ public class GamePanel extends JPanel implements Runnable {
             if(keyH.menuDown && highlightIndex < 7 && delayMenuButtons <= 0) {
                 highlightIndex += 1;
                 delayMenuButtons = 10;
+                playHit("/up_down.wav");
             }
             if(keyH.menuUp && highlightIndex >= 2 && delayMenuButtons <= 0) {
                 highlightIndex -= 1;
                 delayMenuButtons = 10;
+                playHit("/up_down.wav");
             }
             if(keyH.menuContinue && delayMenuButtons <= 0) {
                 oB.rebindKey(highlightIndex);
@@ -419,8 +438,13 @@ public class GamePanel extends JPanel implements Runnable {
             }
             if(keyH.menuBack && delayMenuButtons <= 0) {
                 gameState = startState;
+  
             }
             return;
+        }
+        
+        if(keyH.startMenuPressed) {
+        	gameState = startState;
         }
 
         if (!isHooked) {

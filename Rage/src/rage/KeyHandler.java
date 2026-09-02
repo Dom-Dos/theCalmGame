@@ -7,7 +7,7 @@ public class KeyHandler implements KeyListener {
 
     public boolean menuUp, menuDown, menuBack, menuContinue;
     public boolean upPressed, downPressed, leftPressed, rightPressed,
-                    dashPressed, shotPressed, swordPressed, interactPressed;
+                    dashPressed, shotPressed, swordPressed, interactPressed,startMenuPressed;
     public boolean restartPressed = false;
 
     public int codeUp = KeyEvent.VK_W;
@@ -73,6 +73,7 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_DOWN) menuDown = pressed;
         if (code == KeyEvent.VK_BACK_SPACE) menuBack = pressed;
         if (code == KeyEvent.VK_ENTER) menuContinue = pressed;
+        if (code == KeyEvent.VK_ESCAPE) startMenuPressed = pressed;
 
         if (code == codeUp) upPressed = pressed;
         if (code == codeDown) downPressed = pressed;
