@@ -56,6 +56,7 @@ public class GamePanel extends JPanel implements Runnable {
     OptButtons oB = new OptButtons(this, keyH);
     public int highlightIndex = 1;
     public int delayMenuButtons = 0;
+    public int highlightMenu = 1;
     Message msg = new Message(this);
 
     public int maxLife = 3;
@@ -366,6 +367,7 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         if (gameState == startState) {
+        	/*
             if (keyH.menuContinue) {
             	playHit("/restart.wav");
                 resetGame();
@@ -373,6 +375,31 @@ public class GamePanel extends JPanel implements Runnable {
             if(keyH.interactPressed) {
             	gameState = keyBindState;
             }
+            */
+        	delayMenuButtons --;
+        	if (keyH.menuUp && 2 <= highlightMenu && delayMenuButtons <=0) {
+        		highlightMenu -=1;
+        		System.out.println(highlightMenu);
+        		delayMenuButtons = 10;
+        	}
+        	if (keyH.menuDown && msg.options.length > highlightMenu && delayMenuButtons <=0) {
+        		highlightMenu +=1;
+        		System.out.println(highlightMenu);
+        		delayMenuButtons = 10;
+        	}
+        	if (keyH.menuContinue) {
+        		switch(highlightMenu) {
+        		case(1):
+        			gameState = keyBindState;
+        			break;
+        		case(2):
+        			System.out.println("Noch nicht verfügbar");
+        			break;
+        		case(3):
+        			gameState = playState;
+        			break;
+        		}
+        	}
             return;
         }
         if(gameState == keyBindState) {
@@ -801,7 +828,7 @@ public class GamePanel extends JPanel implements Runnable {
             msg.drawGameOverScreen(g2);
         }
         if (gameState == startState) {
-        	msg.startScreen(g2);
+        	msg.startScreen(g2,highlightMenu);
         }
         if (gameState == keyBindState) {
         	oB.optionScreen(g2, highlightIndex);

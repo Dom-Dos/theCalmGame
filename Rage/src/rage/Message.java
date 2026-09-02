@@ -50,6 +50,12 @@ public class Message {
             messageCounter = 0;
         }
     }
+    
+    String[] options =  new String[] {
+    		"Controls",
+    		"Sound options",
+    		"Start Game"
+    };
 
     public void Center(Graphics2D g2, String text, int y, Font font, Color color, boolean drawBackground) {
         g2.setFont(font);
@@ -75,12 +81,22 @@ public class Message {
     }
     
  // game over screen
-    public void startScreen(Graphics2D g2) {
+    public void startScreen(Graphics2D g2, int highlightmenu) {
     	drawTitlePicture(g2);
     	Center(g2, "Press space to start", gp.screenHeight / 2 -80, fontTitle, Color.CYAN, false);
         Center(g2, "The Calm game", gp.screenHeight / 2 - 40, fontTitle, Color.white, false);
         Center(g2, "--------------", gp.screenHeight / 2 , fontTitle, Color.white, false);
-        Center(g2, "Controls open = I", gp.screenHeight / 2 + 60, fontTitle, Color.RED, false);
+        int startY = gp.screenHeight / 2 + 90;
+        int lineSpacing = 30;
+
+        for (int i = 0; i < options.length; i++) {
+            boolean isHighlighted = (highlightmenu == i + 1);
+
+            Font font = isHighlighted ? fontTitle : fontSub;
+            Color color = isHighlighted ? Color.YELLOW : Color.RED;
+
+            Center(g2, options[i], startY + (i * lineSpacing), font, color,false);
+        }
 
     }
     public void drawTitlePicture(Graphics2D g2) {
