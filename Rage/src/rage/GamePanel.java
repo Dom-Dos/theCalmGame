@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
@@ -25,8 +26,27 @@ public class GamePanel extends JPanel implements Runnable {
     private long playTimeMs = 0;
     private long lastTimeMs = System.currentTimeMillis();
     
+    private int currentLevel = 1;
     private int currentDiffLevel = 0;
+    public int getCurrentLevel() { 
+    	return currentLevel; }
+    public long getPlayTimeMs() {
+    	return lastTimeMs; }
+    
+ // Beim Klicken auf "Speichern"
+    public void saveProgress() {
+        JsonSave.save(this);
+    }
 
+    // Beim Klicken auf "Laden"
+    public void applySaveData() {
+        SaveData infos = JsonSave.load();
+        if (infos != null) {
+            this.currentLevel = infos.currentLevel;
+            this.lastTimeMs = infos.playTimeMs;
+        }
+    }
+    private Image cutsceneGif;
     private BufferedImage playerImg;
     private BufferedImage playerImgRight;
     private BufferedImage playerImgLeft;
@@ -36,6 +56,7 @@ public class GamePanel extends JPanel implements Runnable {
     private BufferedImage playerDashImg;
 
     boolean rotate= false;
+    boolean fearGif = false;
 
     public final int originalTileSize = 16;
     public final int scale = 3;
@@ -108,120 +129,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
         
         this.gameState = startState;
-
-     // ==================== ZONE 1: TUTORIAL & ERSTE HINDERNISSE (0 - 1500) ====================
-        platforms.add(new Platform(0, 500, 600, 30, 180));
-        gEnemy.add(new GroundEnemy(0, 280, 10));
-        platforms.add(new Platform(200, 380, 140, 20, 0));
-        platforms.add(new Platform(400, 280, 140, 20, 0));
-        spikes.add(new SpikeTraps(400, 280, 140, 1));
-       
-        platforms.add(new Platform(700, 480, 400, 30, 0));
-
-        platforms.add(new BlockingWall(1150, 350, 30, 180, 6, true));
-        platforms.add(new AvoidingPlatform(1250, 420, 100, 20, 6));
-        platforms.add(new AvoidingPlatform(1450, 320, 100, 20, 6));       
-
-        // ==================== ZONE 2: DIE PARKOURLANDSCHAFT (1600 - 3500) ====================
-        platforms.add(new BlockingWall(1650, 200, 30, 200, 6, false));
-        platforms.add(new Platform(1750, 220, 160, 20, 6));
-        gEnemy.add(new GroundEnemy(1750, 280, 10));
-        platforms.add(new MovingPlatform(1850, 150, 150, 25, 300, 2));
-        platforms.add(new AvoidingPlatform(2000, 400, 120, 20, 6));
-        platforms.add(new Platform(2200, 500, 300, 30, 0));
-
-        // NEU: Doppelte Stampfer-Falle
-        platforms.add(new SmashingP(2300, 50, 100, 250, 5, 350, 20));
-        platforms.add(new SmashingP(2420, 50, 100, 250, 5, 350, 40));
-
-        platforms.add(new BlockingWall(2550, 380, 30, 160, 6, true));
-        platforms.add(new BlockingWall(2650, 180, 30, 160, 6, false));
-        platforms.add(new Platform(2750, 350, 120, 20, 0));
-        platforms.add(new AvoidingPlatform(2950, 270, 90, 20, 6));
-        platforms.add(new AvoidingPlatform(3150, 200, 90, 20, 3));
-        platforms.add(new BlockingWall(3300, 320, 30, 180, 5, true));
-        platforms.add(new Platform(3400, 480, 400, 30, 6));
-        spikes.add(new SpikeTraps(3500, 480, 120, 1));
-
-        // ==================== ZONE 3: DIE SCHWRE ZWISCHENZONE (3600 - 5200) ====================
-        platforms.add(new AvoidingPlatform(3900, 400, 110, 20, 6));
-        platforms.add(new AvoidingPlatform(4100, 300, 110, 20, 6));
-        platforms.add(new BlockingWall(4300, 150, 30, 250, 6, false));
-        platforms.add(new AvoidingPlatform(4400, 220, 100, 20, 6));
-        platforms.add(new MovingPlatform(4550, 350, 140, 25, 250, 3));
-
-        // NEU: Vertikale Zerquetsch-Passage mit gegeneinander arbeitenden Stampfern
-        platforms.add(new SmashingP(4600, 0, 120, 180, 6, 300, 15));
-        platforms.add(new BlockingWall(4750, 350, 30, 180, 6, true));
-        platforms.add(new Platform(4850, 450, 300, 30, 0));
-        gEnemy.add(new GroundEnemy(4900, 400, 12));
-
-        // ==================== ZONE 4: HOCHGESCHWINDIGKEITS-PASSASE (5300 - 7600) ====================
-        platforms.add(new AvoidingPlatform(5300, 380, 100, 20, 4));
-        platforms.add(new MovingPlatform(5500, 250, 120, 20, 400, 2));
-        platforms.add(new BlockingWall(5850, 120, 30, 280, 4, false));
-        platforms.add(new AvoidingPlatform(6000, 420, 90, 20, 5));
-        platforms.add(new MovingPlatform(6200, 300, 110, 20, 300, 3));
-        platforms.add(new Platform(6450, 480, 350, 30, 0));
-
-        // NEU: Breiter SmashingP-Riesenstempel
-        platforms.add(new SmashingP(6600, 20, 200, 220, 4, 380, 25));
-
-        platforms.add(new BlockingWall(6900, 300, 30, 200, 7, true));
-        platforms.add(new AvoidingPlatform(7050, 220, 80, 20, 6));
-        platforms.add(new AvoidingPlatform(7250, 180, 80, 20, 6));
-        platforms.add(new MovingPlatform(7400, 320, 160, 25, 200, 4));
-        platforms.add(new Platform(7700, 450, 500, 40, 0));
-
-        // ==================== ZONE 5 (NEU): DAS ENDSPURT-INFERNO (7800 - 11000) ====================
-        // Kombinierte Abgründe mit engen Timing-Plattformen
-        platforms.add(new AvoidingPlatform(8300, 380, 90, 20, 7));
-        platforms.add(new SmashingP(8500, 0, 150, 200, 7, 400, 10));
-        platforms.add(new MovingPlatform(8700, 280, 130, 20, 350, 4));
-
-        platforms.add(new BlockingWall(9000, 200, 30, 250, 8, true));
-        platforms.add(new VPlatform(9100, 450, 400, 30, 150, 0)); // Verschwindende Plattform über großem Abgrund
-        spikes.add(new SpikeTraps(9200, 450, 100, 1));
-
-        platforms.add(new AvoidingPlatform(9600, 320, 100, 20, 6));
-        platforms.add(new SmashingP(9800, 50, 120, 220, 8, 380, 15));
-        platforms.add(new Platform(10000, 420, 200, 30, 0));
-        gEnemy.add(new GroundEnemy(10050, 360, 15));
-
-        // Finale Plattform vor dem Ende
-        platforms.add(new Platform(10400, 480, 800, 50, 0));
-
-
-        // ==================== HOOK-PUNKTE (ERWEITERT) ====================
-        grabHook.add(new Hook(600, 100));
-        grabHook.add(new Hook(1350, 120));
-        grabHook.add(new Hook(2100, 150));
-        grabHook.add(new Hook(2360, 80));  // NEU: Über den doppelten SmashingP
-        grabHook.add(new Hook(2850, 100));
-        grabHook.add(new Hook(3700, 180));
-        grabHook.add(new Hook(4250, 80));
-        grabHook.add(new Hook(4660, 90));  // NEU: Greifhaken zur Rettung aus dem Stampfer
-        grabHook.add(new Hook(5100, 140));
-        grabHook.add(new Hook(5750, 90));
-        grabHook.add(new Hook(6700, 120));
-        grabHook.add(new Hook(7350, 80));
-        grabHook.add(new Hook(8400, 100)); // NEU
-        grabHook.add(new Hook(8800, 90));  // NEU
-        grabHook.add(new Hook(9400, 110)); // NEU: Über die lange VPlatform-Lücke
-        grabHook.add(new Hook(9900, 80));  // NEU
-
-
-        // ==================== PROJECTILE BULLETS (ANPASSUNG AN DIE WEITERE WELT) ====================
-        bullets.add(new Ball(4100, -300, 18, 2));
-        bullets.add(new Ball(8200/2, -300, 18, 2));
-        bullets.add(new Ball(8500, -300, 14, 2));
-        bullets.add(new Ball(8800, -300, 24, 2));
-        bullets.add(new Ball(9800/2, -300, 24, 2));
-        bullets.add(new Ball(9800, -300, 16, 2));
-        bullets.add(new Ball(10500, -300, 22, 2));
-
-        bullets.add(new Ball(-400, 320, 18, 3));
-        bullets.add(new Ball(-900, 200, 16, 3));
+        
         
         
         playerImg = ResourceLoader.loadImage("/south.png");
@@ -230,10 +138,141 @@ public class GamePanel extends JPanel implements Runnable {
         platformImg = ResourceLoader.loadImage("/PF_Texture.png");
         backgroundImg = ResourceLoader.loadImage("/BGP1.jpg");
         playerDashImg = ResourceLoader.loadImage("/dash.png");
-    
+        cutsceneGif = new javax.swing.ImageIcon(getClass().getResource("/fearGif.gif")).getImage();
+        loadLevel(currentLevel);
         playMusic("/BG_Music.wav");
     }
+    public void loadLevel(int level) {
+        platforms.clear();
+        gEnemy.clear();
+        spikes.clear();
+        grabHook.clear();
+        bullets.clear();
+        playerBullets.clear();
+        playerSword.clear();
 
+        playerX = 100;
+        playerY = 100;
+        velocityY = 0;
+
+    
+        if (level == 1) {
+
+            platforms.add(new Platform(0, 500, 600, 30, 0));
+            platforms.add(new Platform(700, 420, 200, 20, 0));
+            platforms.add(new Platform(1000, 350, 150, 20, 0));
+            platforms.add(new MovingPlatform(1250, 350, 120, 20, 150, 2));
+            platforms.add(new Platform(1500, 480, 600, 30, 0));
+
+            gEnemy.add(new GroundEnemy(300, 440, 10));
+            gEnemy.add(new GroundEnemy(1600, 420, 12));
+
+            spikes.add(new SpikeTraps(1050, 350, 50, 1));
+            grabHook.add(new Hook(850, 200));
+            bullets.add(new Ball(1300, -200, 16, 2));
+        } 
+        else if (level == 2) {
+        	// ==================== ZONE 1: START & BASICS (0 - 1500) ====================
+        	platforms.add(new Platform(0, 500, 600, 30, 180));
+        	gEnemy.add(new GroundEnemy(0, 280, 5)); // Verlangsamt
+        	platforms.add(new Platform(200, 380, 160, 20, 0)); // Etwas breiter
+        	platforms.add(new Platform(400, 280, 160, 20, 0));
+        	spikes.add(new SpikeTraps(400, 280, 80, 1)); // Weniger Spikes
+
+        	platforms.add(new Platform(700, 480, 400, 30, 0));
+
+        	// HOOK 1: Hilft über den ersten größeren Abgrund
+        	grabHook.add(new Hook(1000, 200)); 
+
+        	platforms.add(new BlockingWall(1150, 350, 30, 180, 3, true));
+        	platforms.add(new AvoidingPlatform(1250, 420, 120, 20, 3)); // Radius auf 3 gesenkt
+        	platforms.add(new AvoidingPlatform(1450, 320, 120, 20, 3));       
+
+        	// ==================== ZONE 2: DIE PARKOURLANDSCHAFT (1600 - 3500) ====================
+        	platforms.add(new BlockingWall(1650, 200, 30, 200, 3, false));
+        	platforms.add(new Platform(1750, 220, 180, 20, 3));
+        	gEnemy.add(new GroundEnemy(1750, 280, 6));
+
+        	// Bogen-Ball im Sprungbereich
+        	bullets.add(new Ball(1900, -100, 16, 2));
+
+        	platforms.add(new MovingPlatform(1850, 150, 160, 25, 300, 2));
+        	platforms.add(new AvoidingPlatform(2000, 400, 130, 20, 3));
+        	platforms.add(new Platform(2200, 500, 350, 30, 0));
+
+        	// Entschärfte Stampfer-Falle (langsamer)
+        	platforms.add(new SmashingP(2300, 50, 100, 250, 3, 350, 20));
+        	platforms.add(new SmashingP(2420, 50, 100, 250, 3, 350, 40));
+
+        	platforms.add(new BlockingWall(2550, 380, 30, 160, 3, true));
+        	platforms.add(new BlockingWall(2650, 180, 30, 160, 3, false));
+        	platforms.add(new Platform(2750, 350, 140, 20, 0));
+
+        	// HOOK 2: Überbrückt die Lücke im mittleren Teil
+        	grabHook.add(new Hook(3050, 150));
+
+        	platforms.add(new AvoidingPlatform(2950, 270, 110, 20, 3));
+        	platforms.add(new AvoidingPlatform(3150, 200, 110, 20, 2));
+        	platforms.add(new BlockingWall(3300, 320, 30, 180, 3, true));
+        	platforms.add(new Platform(3400, 480, 400, 30, 3));
+        	spikes.add(new SpikeTraps(3500, 480, 80, 1));
+
+        	// ==================== ZONE 3: DIE ZWISCHENZONE (3600 - 5200) ====================
+        	platforms.add(new AvoidingPlatform(3900, 400, 130, 20, 3));
+        	bullets.add(new Ball(4000, -150, 16, 2)); // Ball-Hindernis von oben
+
+        	platforms.add(new AvoidingPlatform(4100, 300, 130, 20, 3));
+        	platforms.add(new BlockingWall(4300, 150, 30, 250, 3, false));
+        	platforms.add(new AvoidingPlatform(4400, 220, 120, 20, 3));
+        	platforms.add(new MovingPlatform(4550, 350, 160, 25, 250, 2));
+
+        	platforms.add(new SmashingP(4600, 0, 120, 180, 4, 300, 15));
+        	platforms.add(new BlockingWall(4750, 350, 30, 180, 3, true));
+        	platforms.add(new Platform(4850, 450, 350, 30, 0));
+        	gEnemy.add(new GroundEnemy(4900, 400, 6));
+
+        	// ==================== ZONE 4: HOCHGESCHWINDIGKEITS-PASSAGE (5300 - 7600) ====================
+        	platforms.add(new AvoidingPlatform(5300, 380, 120, 20, 3));
+        	platforms.add(new MovingPlatform(5500, 250, 140, 20, 400, 2));
+
+        	bullets.add(new Ball(5650, -200, 18, 3)); // Ball von oben
+
+        	platforms.add(new BlockingWall(5850, 120, 30, 280, 3, false));
+        	platforms.add(new AvoidingPlatform(6000, 420, 110, 20, 3));
+        	platforms.add(new MovingPlatform(6200, 300, 130, 20, 300, 2));
+        	platforms.add(new Platform(6450, 480, 380, 30, 0));
+
+        	platforms.add(new SmashingP(6600, 20, 200, 220, 3, 380, 25));
+
+        	platforms.add(new BlockingWall(6900, 300, 30, 200, 4, true));
+        	platforms.add(new AvoidingPlatform(7050, 220, 110, 20, 3));
+        	platforms.add(new AvoidingPlatform(7250, 180, 110, 20, 3));
+        	platforms.add(new MovingPlatform(7400, 320, 180, 25, 200, 3));
+        	platforms.add(new Platform(7700, 450, 500, 40, 0));
+
+        	// ==================== ZONE 5: DAS FINALE (7800 - 11000) ====================
+        	platforms.add(new AvoidingPlatform(8300, 380, 110, 20, 3));
+        	platforms.add(new SmashingP(8500, 0, 150, 200, 4, 400, 10));
+        	platforms.add(new MovingPlatform(8700, 280, 150, 20, 350, 3));
+
+        	// HOOK 3: Retter-Hook für das Ende über der verschwindenden Plattform
+        	grabHook.add(new Hook(9150, 200));
+
+        	platforms.add(new BlockingWall(9000, 200, 30, 250, 4, true));
+        	platforms.add(new VPlatform(9100, 450, 400, 30, 150, 0));
+        	spikes.add(new SpikeTraps(9200, 450, 80, 1));
+
+        	bullets.add(new Ball(9400, -100, 16, 2)); // Finaler Ball
+
+        	platforms.add(new AvoidingPlatform(9600, 320, 120, 20, 3));
+        	platforms.add(new SmashingP(9800, 50, 120, 220, 4, 380, 15));
+        	platforms.add(new Platform(10000, 420, 250, 30, 0));
+        	gEnemy.add(new GroundEnemy(10050, 360, 7));
+
+        	// Finale Plattform
+        	platforms.add(new Platform(10400, 480, 800, 50, 0));
+        }
+    }    
     public static int getPlayerX() {
     	return playerX;
     }
@@ -296,22 +335,11 @@ public class GamePanel extends JPanel implements Runnable {
         int overlapBottom = Math.min(playerBounds.y + playerBounds.height, pBounds.y + pBounds.height);
         int overlapY = overlapBottom - overlapTop;
 
-        final int TOLERANCE = 4;
+        final int TOLERANCE = 2;
         return overlapY > TOLERANCE;
     }
 
-    public void difficulty(long playTimeMs) {
-        long seconds = playTimeMs / 1000;
-        int targetLevel = (int) (seconds / 30); 
 
-        if (targetLevel > currentDiffLevel) {
-            currentDiffLevel = targetLevel;
-            
-            int ballSize = 30 + (currentDiffLevel * 20);
-            bullets.add(new Ball(1000, 3000, ballSize, 2.5 / 2));
-            msg.showFloatingMessage("STUFE " + currentDiffLevel + "!");
-        }
-    }
 
     public boolean playerTookDamage() {
         if (playerDmgTimer > 0) {
@@ -359,6 +387,27 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+    	if (fearGif) {
+    		return;
+    	}
+    	
+    	if (playerX >= 2000 && currentLevel ==1) {
+    		currentLevel = 2;
+    		saveProgress();
+    		loadLevel(currentLevel);
+    		msg.showFloatingMessage("Stage 2");
+    		
+    		return;
+    	}else if (playerX >= 10000 && currentLevel ==2) {
+    		currentLevel = 3;
+    		saveProgress();
+    		loadLevel(currentLevel);
+    		fearGif = true;
+    		stopMusic();
+    		playHit("/jumpScare.wav");
+    		
+    		return;
+    	}
         playerDmgTimer --;
         
         
@@ -396,6 +445,7 @@ public class GamePanel extends JPanel implements Runnable {
         		playHit("/up_down.wav");
         		System.out.println(highlightMenu);
         		delayMenuButtons = 10;
+        		
         	}
         	if (keyH.menuDown && msg.options.length > highlightMenu && delayMenuButtons <=0) {
         		highlightMenu +=1;
@@ -587,7 +637,11 @@ public class GamePanel extends JPanel implements Runnable {
                     }else if (p instanceof VPlatform) {
                     	((VPlatform) p).isPlayerStandingOn = true;
                     } }else if (p instanceof SmashingP) {
-                    	playerY = p.y - tileSize;
+                    	// Hier weiter machen fehler beheben
+                    	if(playerY >= p.y) {
+                    		playerY = p.y - tileSize;
+                    	}
+                    	
                     	
                 }
             }
@@ -759,7 +813,7 @@ public class GamePanel extends JPanel implements Runnable {
         fallen_multiplier = 1;
         currentHealth = maxHealth;
         playTimeMs = 0;
-        currentDiffLevel = 0;
+      
      
         for (Ball bullet : bullets) {
             bullet.reset();
@@ -857,6 +911,9 @@ public class GamePanel extends JPanel implements Runnable {
         if (gameState == keyBindState) {
         	oB.optionScreen(g2, highlightIndex);
         	
+        }
+        if (fearGif && cutsceneGif != null) {
+            g2.drawImage(cutsceneGif, 0, 0, screenWidth, screenHeight, this);
         }
         g2.dispose();
     }
