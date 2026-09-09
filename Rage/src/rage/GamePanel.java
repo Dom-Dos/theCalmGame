@@ -26,7 +26,7 @@ public class GamePanel extends JPanel implements Runnable {
     private long playTimeMs = 0;
     private long lastTimeMs = System.currentTimeMillis();
     
-    private int currentLevel = 1;
+    private int currentLevel = 3;
     private int currentDiffLevel = 0;
     public int getCurrentLevel() { 
     	return currentLevel; }
@@ -58,9 +58,9 @@ public class GamePanel extends JPanel implements Runnable {
     boolean rotate= false;
     boolean fearGif = false;
 
-    public final int originalTileSize = 16;
-    public final int scale = 3;
-    public final int tileSize = originalTileSize * scale;
+    public static final int originalTileSize = 16;
+    public static final int scale = 3;
+    public static final int tileSize = originalTileSize * scale;
 
     public final int maxScreenCol = 16;
     public final int maxScreenRow = 12;
@@ -120,6 +120,11 @@ public class GamePanel extends JPanel implements Runnable {
     ArrayList<Ball> bullets = new ArrayList<>();
     
     ArrayList<SpikeTraps> spikes = new ArrayList <>();
+    
+    ArrayList<AgileEnemy> aEnemys = new ArrayList <>();
+    public static ArrayList<ProjectileAE> aep = new ArrayList <>();
+    
+    
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
@@ -226,7 +231,7 @@ public class GamePanel extends JPanel implements Runnable {
         	platforms.add(new AvoidingPlatform(4400, 220, 120, 20, 3));
         	platforms.add(new MovingPlatform(4550, 350, 160, 25, 250, 2));
 
-        	platforms.add(new SmashingP(4600, 0, 120, 180, 4, 300, 15));
+        	platforms.add(new SmashingP(4600, 0, 120, 180, 4, 300, 15/4));
         	platforms.add(new BlockingWall(4750, 350, 30, 180, 3, true));
         	platforms.add(new Platform(4850, 450, 350, 30, 0));
         	gEnemy.add(new GroundEnemy(4900, 400, 6));
@@ -242,7 +247,7 @@ public class GamePanel extends JPanel implements Runnable {
         	platforms.add(new MovingPlatform(6200, 300, 130, 20, 300, 2));
         	platforms.add(new Platform(6450, 480, 380, 30, 0));
 
-        	platforms.add(new SmashingP(6600, 20, 200, 220, 3, 380, 25));
+        	platforms.add(new Platform(6600, 20, 400, 220, 3));
 
         	platforms.add(new BlockingWall(6900, 300, 30, 200, 4, true));
         	platforms.add(new AvoidingPlatform(7050, 220, 110, 20, 3));
@@ -252,7 +257,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         	// ==================== ZONE 5: DAS FINALE (7800 - 11000) ====================
         	platforms.add(new AvoidingPlatform(8300, 380, 110, 20, 3));
-        	platforms.add(new SmashingP(8500, 0, 150, 200, 4, 400, 10));
+        	platforms.add(new SmashingP(8500, 0, 150, 200, 4, 400, 10/4));
         	platforms.add(new MovingPlatform(8700, 280, 150, 20, 350, 3));
 
         	// HOOK 3: Retter-Hook für das Ende über der verschwindenden Plattform
@@ -265,12 +270,16 @@ public class GamePanel extends JPanel implements Runnable {
         	bullets.add(new Ball(9400, -100, 16, 2)); // Finaler Ball
 
         	platforms.add(new AvoidingPlatform(9600, 320, 120, 20, 3));
-        	platforms.add(new SmashingP(9800, 50, 120, 220, 4, 380, 15));
+        	platforms.add(new SmashingP(9800, 50, 120, 220, 4, 380, 15/4));
         	platforms.add(new Platform(10000, 420, 250, 30, 0));
         	gEnemy.add(new GroundEnemy(10050, 360, 7));
 
         	// Finale Plattform
         	platforms.add(new Platform(10400, 480, 800, 50, 0));
+        	//Teststage für unseren AE
+        }else if (currentLevel == 3) {
+        	platforms.add(new Platform(-100,400,3000,300,0));
+        	aEnemys.add(new AgileEnemy(100,100,30,60));
         }
     }    
     public static int getPlayerX() {
@@ -387,6 +396,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+    	System.out.println(playerX);
     	if (fearGif) {
     		return;
     	}
@@ -398,7 +408,7 @@ public class GamePanel extends JPanel implements Runnable {
     		msg.showFloatingMessage("Stage 2");
     		
     		return;
-    	}else if (playerX >= 10000 && currentLevel ==2) {
+    	}else if (playerX >= 5000 && currentLevel ==2) {
     		currentLevel = 3;
     		saveProgress();
     		loadLevel(currentLevel);
@@ -567,6 +577,12 @@ public class GamePanel extends JPanel implements Runnable {
                     platforms.remove(i);
                 }
             }
+        }
+        for(AgileEnemy enemies : aEnemys) {
+        	enemies.update();
+        }
+        for(ProjectileAE pj : aep) {
+        	pj.update();
         }
 
         if (keyH.leftPressed && playerX > 0) {
@@ -892,6 +908,12 @@ public class GamePanel extends JPanel implements Runnable {
         msg.drawFloating(g2, playerX, playerY, tileSize,fallen_multiplier);
         for (Shot pb : playerBullets) {
             pb.draw1(g2);
+        }
+        for(AgileEnemy enemies : aEnemys) {
+        	enemies.draw(g2);
+        }
+        for(ProjectileAE pj : aep) {
+        	pj.draw(g2);
         }
         for (Sword sw : playerSword) {
             sw.draw1(g2);
