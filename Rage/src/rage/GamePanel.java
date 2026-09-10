@@ -20,14 +20,14 @@ public class GamePanel extends JPanel implements Runnable {
     public final int startState = 3;
     public final int keyBindState = 4;
 
-    public int maxHealth = 5;
+    public int maxHealth = 20;
     public int currentHealth = maxHealth;
 
     private long playTimeMs = 0;
     private long lastTimeMs = System.currentTimeMillis();
     
     private int currentLevel = 3;
-    private int currentDiffLevel = 0;
+   
     public int getCurrentLevel() { 
     	return currentLevel; }
     public long getPlayTimeMs() {
@@ -90,7 +90,7 @@ public class GamePanel extends JPanel implements Runnable {
     String lastFaced = "right";
 
     int cameraX = 0;
-
+    boolean jumpScare = false;
     double velocityY = 0;
     double dashVelocityX = 0;
     double gravity = 0.5;
@@ -106,7 +106,7 @@ public class GamePanel extends JPanel implements Runnable {
     ArrayList<GroundEnemy> gEnemy = new ArrayList<>();
     public static int playerFacingDirection = 1;
     int shootCooldown = 0;
-    final int SHOOT_DELAY = 100;
+    final int SHOOT_DELAY = 30;
 
     int fallen_multiplier = 1;
    
@@ -115,7 +115,7 @@ public class GamePanel extends JPanel implements Runnable {
     private Hook currentHook = null;
     private boolean isHooked = false;
 
-    ArrayList<Platform> platforms = new ArrayList<>();
+    public static ArrayList<Platform> platforms = new ArrayList<>();
 
     ArrayList<Ball> bullets = new ArrayList<>();
     
@@ -278,9 +278,36 @@ public class GamePanel extends JPanel implements Runnable {
         	platforms.add(new Platform(10400, 480, 800, 50, 0));
         	//Teststage für unseren AE
         }else if (currentLevel == 3) {
-        	platforms.add(new Platform(-100,400,3000,300,0));
-        	aEnemys.add(new AgileEnemy(100,100,30,60));
-        }
+        	
+        	// ==================== ARENA-BEGRENZUNG ====================
+            // 1. Boden (Breite: 1200)
+            platforms.add(new Platform(0, 500, 1200, 50, 0));
+            
+            // 2. Linke Wand (Verhindert Flucht nach links)
+            platforms.add(new Platform(0, 100, 40, 400, 0));
+            
+            // 3. Rechte Wand (Verhindert Flucht nach rechts)
+            platforms.add(new Platform(1160, 100, 40, 400, 0));
+            
+            // 4. Decke (Verhindert Drüberspringen/Dash nach oben)
+            platforms.add(new Platform(0, 0, 1200, 40, 0));
+
+            // ==================== PLATTMASCHINEN / PLATTFORMEN IN DER ARENA ====================
+            // Kleine Plattformen in der Mitte für vertikales Ausweichen
+            platforms.add(new Platform(300, 380, 150, 20, 0));
+            platforms.add(new Platform(750, 380, 150, 20, 0));
+
+            // ==================== GEGNER-SPAWNS (3x AgileEnemy) ====================
+            // Gegner 1 (Links)
+            aEnemys.add(new AgileEnemy(200, 300, 30, 60));
+            
+            // Gegner 2 (Mitte)
+            aEnemys.add(new AgileEnemy(580, 300, 30, 60));
+            
+            // Gegner 3 (Rechts)
+            aEnemys.add(new AgileEnemy(950, 300, 30, 60)); 
+            
+            }
     }    
     public static int getPlayerX() {
     	return playerX;
@@ -385,7 +412,7 @@ public class GamePanel extends JPanel implements Runnable {
                 }else if (delayGame > 0) {
                 	
                 	FPS = 30;
-                	System.out.println("Delay");
+                	//System.out.println("Delay");
                 }
             }
         }
@@ -396,7 +423,12 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
-    	System.out.println(playerX);
+    	//System.out.println(playerX);
+    	if (aEnemys.size() == 0) {
+    		jumpScare =  true;
+    		System.out.println("Warum nur?");
+    	}
+    	System.out.println(aEnemys.size());
     	if (fearGif) {
     		return;
     	}
@@ -453,14 +485,14 @@ public class GamePanel extends JPanel implements Runnable {
         	if (keyH.menuUp && 2 <= highlightMenu && delayMenuButtons <=0) {
         		highlightMenu -=1;
         		playHit("/up_down.wav");
-        		System.out.println(highlightMenu);
+        		//System.out.println(highlightMenu);
         		delayMenuButtons = 10;
         		
         	}
         	if (keyH.menuDown && msg.options.length > highlightMenu && delayMenuButtons <=0) {
         		highlightMenu +=1;
         		playHit("/up_down.wav");
-        		System.out.println(highlightMenu);
+        		//System.out.println(highlightMenu);
         		delayMenuButtons = 10;
         	}
         	if (keyH.menuContinue) {
@@ -578,11 +610,23 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
         }
-        for(AgileEnemy enemies : aEnemys) {
-        	enemies.update();
+        
+        for (int i = aEnemys.size() - 1; i >= 0; i--) {
+            AgileEnemy ae = aEnemys.get(i);
+            ae.update();
+            if (ae.att != null && ae.att.intersects(getPlayerBounds())) {
+                playerTookDamage();
+            }
+            if (ae.health <= 0) {
+                aEnemys.remove(i);
+            }
         }
+
         for(ProjectileAE pj : aep) {
         	pj.update();
+        	if(pj.getBounds().intersects(getPlayerBounds())) {
+        		playerTookDamage();
+        	}
         }
 
         if (keyH.leftPressed && playerX > 0) {
@@ -719,7 +763,11 @@ public class GamePanel extends JPanel implements Runnable {
             playHit("/slash-sword.wav");
             shootCooldown = SHOOT_DELAY;
         }
-
+     
+ 
+        	
+        	
+        	
         for (int i = 0; i < playerBullets.size(); i++) {
             Shot pb = playerBullets.get(i);
             pb.update();
@@ -731,6 +779,12 @@ public class GamePanel extends JPanel implements Runnable {
                     pb.active = false;
                     break;
                 }
+            }
+            for(AgileEnemy ae : aEnemys) {
+            	if(ae.getBounds().intersects(pb.getBounds())) {
+            		ae.health --;
+            		pb.active = false;
+            	}
             }
 
             if (!pb.active) {
@@ -747,14 +801,24 @@ public class GamePanel extends JPanel implements Runnable {
                 if (bullet.getBounds().intersects(sw.getBounds())) {
                     //bullet.reset();
                 	bullet.size = 0;
+                	sw.active = false;
                     break;
                 }
             }
+            for(AgileEnemy ae : aEnemys) {
+            	if(ae.getBounds().intersects(sw.getBounds())) {
+            		ae.health --;
+            		sw.active = false;
+            	}
+            }
+            
 
             if (!sw.active) {
                 playerSword.remove(j);
                 j--;
             }
+            
+
         }
 
         for (int i = gEnemy.size() - 1; i >= 0; i--) {
@@ -934,7 +998,10 @@ public class GamePanel extends JPanel implements Runnable {
         	oB.optionScreen(g2, highlightIndex);
         	
         }
-        if (fearGif && cutsceneGif != null) {
+        if (fearGif && cutsceneGif != null ) {
+            g2.drawImage(cutsceneGif, 0, 0, screenWidth, screenHeight, this);
+        }
+        if (currentLevel == 3 && gEnemy.size()== 0 && jumpScare) {
             g2.drawImage(cutsceneGif, 0, 0, screenWidth, screenHeight, this);
         }
         g2.dispose();

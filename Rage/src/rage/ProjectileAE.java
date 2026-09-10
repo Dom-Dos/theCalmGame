@@ -9,7 +9,7 @@ public class ProjectileAE {
     public int size = 10;
     
     private double velX, velY;
-    private double speed = 5.0; 
+    private double speed = 3.0; 
 
     public ProjectileAE(int x, int y, int playerX, int playerY) {
         this.x = x;
@@ -19,7 +19,7 @@ public class ProjectileAE {
 
     private void calculateDirection(int playerX, int playerY) {
         double diffX = playerX - x;
-        double diffY = playerY - y;
+        double diffY = playerY+20 - y;
 
         double angle = Math.atan2(diffY, diffX);
 
