@@ -19,6 +19,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int gameOverState = 2;
     public final int startState = 3;
     public final int keyBindState = 4;
+    public final int levelSelectState = 5;
 
     public int maxHealth = 20;
     public int currentHealth = maxHealth;
@@ -482,46 +483,57 @@ public class GamePanel extends JPanel implements Runnable {
             }
             return;
         }
-        if (gameState == startState) {
-        	/*
-            if (keyH.menuContinue) {
-            	playHit("/restart.wav");
-                resetGame();
-            }
-            if(keyH.interactPressed) {
-            	gameState = keyBindState;
-            }
-            */
-        	delayMenuButtons --;
-        	if (keyH.menuUp && 2 <= highlightMenu && delayMenuButtons <=0) {
-        		highlightMenu -=1;
-        		playHit("/up_down.wav");
-        		//System.out.println(highlightMenu);
-        		delayMenuButtons = 10;
-        		
-        	}
-        	if (keyH.menuDown && msg.options.length > highlightMenu && delayMenuButtons <=0) {
-        		highlightMenu +=1;
-        		playHit("/up_down.wav");
-        		//System.out.println(highlightMenu);
-        		delayMenuButtons = 10;
-        	}
-        	if (keyH.menuContinue) {
-        		switch(highlightMenu) {
-        		case(1):
-        			gameState = keyBindState;
-        			break;
-        		case(2):
-        			System.out.println("Noch nicht verfügbar");
-        			break;
-        		case(3):
-        			gameState = playState;
-        		delayGame = 60;
-        			break;
-        		}
-        	}
-            return;
-        }
+    	        if (gameState == startState) {
+    	            delayMenuButtons--;
+    	            if (keyH.menuUp && highlightMenu >= 2 && delayMenuButtons <= 0) {
+    	                highlightMenu--;
+    	                playHit("/up_down.wav");
+    	                delayMenuButtons = 10;
+    	            }
+    	            if (keyH.menuDown && highlightMenu < msg.options.length && delayMenuButtons <= 0) {
+    	                highlightMenu++;
+    	                playHit("/up_down.wav");
+    	                delayMenuButtons = 10;
+    	            }
+    	            if (keyH.menuContinue && delayMenuButtons <= 0) {
+    	                delayMenuButtons = 15;
+    	                switch (highlightMenu) {
+    	                    case 1: gameState = keyBindState; break;
+    	                    case 2: System.out.println("Noch nicht verfügbar"); break;
+    	                    case 3: gameState = levelSelectState; highlightMenu = 1; break;
+    	                }
+    	            }
+    	            return;
+    	        }
+
+    	        if (gameState == levelSelectState) {
+    	            delayMenuButtons--;
+    	            if (keyH.menuUp && highlightMenu >= 2 && delayMenuButtons <= 0) {
+    	                highlightMenu--;
+    	                playHit("/up_down.wav");
+    	                delayMenuButtons = 10;
+    	            }
+    	            if (keyH.menuDown && highlightMenu < msg.levels.length && delayMenuButtons <= 0) {
+    	                highlightMenu++;
+    	                playHit("/up_down.wav");
+    	                delayMenuButtons = 10;
+    	            }
+    	            if (keyH.menuBack && delayMenuButtons <= 0) {
+    	                gameState = startState;
+    	                highlightMenu = 3;
+    	                delayMenuButtons = 15;
+    	            }
+    	            if (keyH.menuContinue && delayMenuButtons <= 0) {
+    	                currentLevel = highlightMenu; 
+    	                jumpScare = false;
+    	                loadLevel(currentLevel);
+    	                gameState = playState;
+    	                highlightMenu = 1;
+    	                delayMenuButtons = 15;
+    	                lastTimeMs = System.currentTimeMillis();
+    	            }
+    	            return;
+    	        }
         if(gameState == keyBindState) {
         	delayMenuButtons --;
             if(keyH.menuDown && highlightIndex < 7 && delayMenuButtons <= 0) {
@@ -546,8 +558,9 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         
-        long currentTimeMs = System.currentTimeMillis();
+        
     	if (gameState == playState) {
+    		long currentTimeMs = System.currentTimeMillis();
     	    playTimeMs += (currentTimeMs - lastTimeMs);
     	    playerDmgTimer --;
             
@@ -584,6 +597,8 @@ public class GamePanel extends JPanel implements Runnable {
         
         if(keyH.startMenuPressed) {
         	gameState = startState;
+            highlightMenu = 1;
+
         }
 
         if (!isHooked) {
@@ -942,6 +957,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
     	}
     }
+        
     public void respawnOnNextPlatformLeft() {
         Platform targetPlatform = null;
         int closestX = -1; 
@@ -1077,9 +1093,11 @@ public class GamePanel extends JPanel implements Runnable {
         	msg.startScreen(g2,highlightMenu);
         }
         if (gameState == keyBindState) {
-        	oB.optionScreen(g2, highlightIndex);
-        	
+        	oB.optionScreen(g2, highlightIndex);        	
         }
+        if (gameState == levelSelectState) {
+			msg.levelScreen(g2, highlightMenu);
+		}
         if (fearGif && cutsceneGif != null ) {
             g2.drawImage(cutsceneGif, 0, 0, screenWidth, screenHeight, this);
         }

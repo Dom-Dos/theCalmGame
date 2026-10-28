@@ -51,11 +51,18 @@ public class Message {
         }
     }
     
-    String[] options =  new String[] {
+   public String[] options =  new String[] {
     		"Controls",
     		"Sound options-Not Available",
     		"Start Game"
     };
+    
+    public String[] levels =  new String[] {
+			"Level 1",
+			"Level 2",
+			"Level 3",
+			"Level 4"
+	};
 
     public void Center(Graphics2D g2, String text, int y, Font font, Color color, boolean drawBackground) {
         g2.setFont(font);
@@ -83,7 +90,7 @@ public class Message {
  // game over screen
     public void startScreen(Graphics2D g2, int highlightmenu) {
     	drawTitlePicture(g2);
-    	Center(g2, "Press space to start", gp.screenHeight / 2 -80, fontTitle, Color.CYAN, false);
+    	Center(g2, "Press Enter to continue", gp.screenHeight / 2 -80, fontTitle, Color.CYAN, false);
         Center(g2, "The Calm game", gp.screenHeight / 2 - 40, fontTitle, Color.white, false);
         Center(g2, "--------------", gp.screenHeight / 2 , fontTitle, Color.white, false);
         int startY = gp.screenHeight / 2 + 90;
@@ -99,6 +106,24 @@ public class Message {
         }
 
     }
+    
+    public void levelScreen(Graphics2D g2, int highlightmenu) {
+		drawTitlePicture(g2);
+		Center(g2, "Select Level", gp.screenHeight / 2 -80, fontTitle, Color.CYAN, false);
+		Center(g2, "--------------", gp.screenHeight / 2 - 40, fontTitle, Color.white, false);
+		int startY = gp.screenHeight / 2 + 90;
+		int lineSpacing = 30;
+
+		for (int i = 0; i < levels.length; i++) {
+			boolean isHighlighted = (highlightmenu == i + 1);
+
+			Font font = isHighlighted ? fontTitle : fontSub;
+			Color color = isHighlighted ? Color.YELLOW : Color.RED;
+
+			Center(g2, levels[i], startY + (i * lineSpacing), font, color,false);
+		}
+
+	}
     public void drawTitlePicture(Graphics2D g2) {
     	titlePicture = ResourceLoader.loadImage("/BGP1.jpg");
     	if (titlePicture != null) {
