@@ -72,7 +72,7 @@ public class AgileEnemy {
 		case Shooting:
 			timer --;
 			if(timer >= 0 && distanceToPlayer() <= 500) {
-				System.out.println("Peng Peng");
+				//System.out.println("Peng Peng");
 				GamePanel.aep.add(new ProjectileAE(x+(sizeX/2),y +(sizeY/2),GamePanel.playerX,GamePanel.playerY));
 				timer = 20;
 				shootDelay --;
@@ -144,7 +144,7 @@ public class AgileEnemy {
 			
 			
 			
-		System.out.println(currentState);
+		//System.out.println(currentState);
 		isGrounded = false;
 		y += velocityY;
 	}
@@ -178,8 +178,8 @@ public class AgileEnemy {
 			}
 	}
 	public double distanceToPlayer() {
-		double playerCenterX = GamePanel.playerX + GamePanel.tileSize/2;
-	    double playerCenterY = GamePanel.playerY + (GamePanel.tileSize/2);
+		double playerCenterX = GamePanel.playerX + GamePanel.playerSize/2;
+	    double playerCenterY = GamePanel.playerY + (GamePanel.playerSize/2);
 	    double distanceX = x - playerCenterX;
 	    double distanceY = y - playerCenterY;
 	    double absolutDistance = Math.sqrt((distanceY*distanceY) + (distanceX * distanceX));
@@ -188,7 +188,7 @@ public class AgileEnemy {
 	public void giveRandomAction() {
 
 		double random = Math.random();
-		System.out.println(random);
+		//System.out.println(random);
 		if (random < 0.2) {
 	        	currentState = State.Walking;  
 	        	timer = 50;

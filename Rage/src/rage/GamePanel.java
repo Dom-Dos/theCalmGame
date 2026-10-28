@@ -26,12 +26,18 @@ public class GamePanel extends JPanel implements Runnable {
     private long playTimeMs = 0;
     private long lastTimeMs = System.currentTimeMillis();
     
-    private int currentLevel = 3;
+    private int currentLevel = 4;
    
     public int getCurrentLevel() { 
     	return currentLevel; }
     public long getPlayTimeMs() {
     	return lastTimeMs; }
+    
+    //boolean für animationen
+    boolean playerInAni = false;
+    boolean fireballAniRight = false;
+    boolean fireballAniLeft = false;
+    int AniTimer = 30;
     
  // Beim Klicken auf "Speichern"
     public void saveProgress() {
@@ -58,14 +64,14 @@ public class GamePanel extends JPanel implements Runnable {
     boolean rotate= false;
     boolean fearGif = false;
 
-    public static final int originalTileSize = 16;
+    public static final int originalplayerSize = 16;
     public static final int scale = 3;
-    public static final int tileSize = originalTileSize * scale;
+    public static final int playerSize = originalplayerSize * scale;
 
     public final int maxScreenCol = 16;
     public final int maxScreenRow = 12;
-    public final int screenWidth = tileSize * maxScreenCol;
-    public final int screenHeight = tileSize * maxScreenRow;
+    public final int screenWidth = playerSize * maxScreenCol;
+    public final int screenHeight = playerSize * maxScreenRow;
 
     private int FPS = 60;
     private Thread gameThread;
@@ -116,6 +122,7 @@ public class GamePanel extends JPanel implements Runnable {
     private boolean isHooked = false;
 
     public static ArrayList<Platform> platforms = new ArrayList<>();
+    private SmashingP ridingStone = null; //zur speicherung auf welchem smashingP der spieler sich grade befindet
 
     ArrayList<Ball> bullets = new ArrayList<>();
     
@@ -123,6 +130,10 @@ public class GamePanel extends JPanel implements Runnable {
     
     ArrayList<AgileEnemy> aEnemys = new ArrayList <>();
     public static ArrayList<ProjectileAE> aep = new ArrayList <>();
+    
+    
+    ArrayList<Lava> lava = new ArrayList <>();
+     public static ArrayList<LavaFireball> lavaSparks = new ArrayList <>();
     
     
     public GamePanel() {
@@ -155,6 +166,10 @@ public class GamePanel extends JPanel implements Runnable {
         bullets.clear();
         playerBullets.clear();
         playerSword.clear();
+        lava.clear();
+        lavaSparks.clear();
+        aEnemys.clear();
+        aep.clear();
 
         playerX = 100;
         playerY = 100;
@@ -277,7 +292,7 @@ public class GamePanel extends JPanel implements Runnable {
         	// Finale Plattform
         	platforms.add(new Platform(10400, 480, 800, 50, 0));
         	//Teststage für unseren AE
-        }else if (currentLevel == 3) {
+        }else if (level == 3) {
         	
         	// ==================== ARENA-BEGRENZUNG ====================
             // 1. Boden (Breite: 1200)
@@ -307,6 +322,15 @@ public class GamePanel extends JPanel implements Runnable {
             // Gegner 3 (Rechts)
             aEnemys.add(new AgileEnemy(950, 300, 30, 60)); 
             
+            }else if (level == 4) {
+            	
+            	platforms.add(new Platform(0, 500, 600, 30, 0));
+                platforms.add(new Platform(700, 420, 200, 20, 0));
+                platforms.add(new Platform(1000, 350, 150, 20, 0));
+                lava.add(new Lava(1, 450, 300, 150, 600, 0));
+            	
+            	
+            	
             }
     }    
     public static int getPlayerX() {
@@ -337,7 +361,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public Rectangle getPlayerBounds() {
-        return new Rectangle(playerX, playerY, tileSize, tileSize);
+        return new Rectangle(playerX, playerY, playerSize, playerSize ); 
     }
 
     public void startGameThread() {
@@ -426,7 +450,6 @@ public class GamePanel extends JPanel implements Runnable {
     	//System.out.println(playerX);
     	if (aEnemys.size() == 0) {
     		jumpScare =  true;
-    		System.out.println("Warum nur?");
     	}
     	System.out.println(aEnemys.size());
     	if (fearGif) {
@@ -450,21 +473,9 @@ public class GamePanel extends JPanel implements Runnable {
     		
     		return;
     	}
-        playerDmgTimer --;
         
-        
-       
-        if (shootCooldown > 0) {
-            shootCooldown--;
-        }
 
-    	long currentTimeMs = System.currentTimeMillis();
-    	if (gameState == playState) {
-    	    playTimeMs += (currentTimeMs - lastTimeMs);
-    	}
-    	lastTimeMs = currentTimeMs;
-    	Skills.update();
-        if (gameState == gameOverState) {
+    	        if (gameState == gameOverState) {
             if (keyH.restartPressed) {
             	playHit("/restart.wav");
                 resetGame();
@@ -535,6 +546,42 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         
+        long currentTimeMs = System.currentTimeMillis();
+    	if (gameState == playState) {
+    	    playTimeMs += (currentTimeMs - lastTimeMs);
+    	    playerDmgTimer --;
+            
+            for (Lava l : lava) {
+                l.update();
+                if (l.getBounds().intersects(getPlayerBounds())) {
+                    playerTookDamage();
+                    playerY = l.y - playerSize;
+                    velocityY = jumpStrength;
+                    isGrounded = false;
+                    // weiter
+                }
+            }
+
+            for (int i = lavaSparks.size() - 1; i >= 0; i--) {
+                LavaFireball f = lavaSparks.get(i);
+                f.update();                         
+                if (!f.active) {
+                    lavaSparks.remove(i);
+                } else if (f.getBounds().intersects(getPlayerBounds())) {
+                    playerTookDamage();
+                   
+                }
+            }      
+            
+           
+            if (shootCooldown > 0) {
+                shootCooldown--;
+            }
+    	
+    	lastTimeMs = currentTimeMs;
+    	Skills.update();
+
+        
         if(keyH.startMenuPressed) {
         	gameState = startState;
         }
@@ -574,7 +621,7 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
         }
-
+        ridingStone = null;  
         for (Platform p : platforms) {
             if (p instanceof AvoidingPlatform) {
                 ((AvoidingPlatform) p).update(playerX, playerY);
@@ -582,24 +629,31 @@ public class GamePanel extends JPanel implements Runnable {
                 ((BlockingWall) p).update(playerX, playerY);
             }else if (p instanceof MovingPlatform) {
                 ((MovingPlatform) p).update();
-            }else if (p instanceof SmashingP) {
-            	((SmashingP) p).update();
-            	if (p instanceof SmashingP) {
+            }
+            	 else if (p instanceof SmashingP) {
             	    SmashingP sp = (SmashingP) p;
-            	    sp.update();
+            	    int playerFeet = playerY + playerSize;
+            	    boolean ridingOn = playerFeet >= sp.y - 2 && playerFeet <= sp.y + 6
+            	            && velocityY >= 0
+            	            && playerX + playerSize > sp.x && playerX < sp.x + sp.width;
+            	    sp.update();                    
+            	    if (ridingOn) {
+            	        playerY = sp.y - playerSize;
+            	        velocityY = 0;
+                        ridingStone = sp;
+            	    }
 
-            	    if (sp.getBounds().intersects(getPlayerBounds())) {
-            	        
-            	        if (sp.isSmashingDown()) {
-            	            currentHealth = 0; 
-            	            msg.showFloatingMessage("Du bist Matsche");
-            	            playHit("/angryStone.wav");
-            	            gameState = gameOverState;
-            	        }
+            	    if (sp.isSmashingDown()
+            	            && sp.getBounds().intersects(getPlayerBounds())
+            	            && playerY >= sp.y + sp.height - 5) {
+            	        currentHealth = 0;
+            	        msg.showFloatingMessage("Du bist Matsche");
+            	        playHit("/angryStone.wav");
+            	        gameState = gameOverState;
             	    }
             	}
-            }
-        }
+            	}
+   
         
         for (int i = platforms.size() - 1; i >= 0; i--) {
             Platform p = platforms.get(i);
@@ -628,8 +682,8 @@ public class GamePanel extends JPanel implements Runnable {
         		playerTookDamage();
         	}
         }
-
-        if (keyH.leftPressed && playerX > 0) {
+        // hier muss ich noch eine überprüfung einbauen ob grad keine anoimation läuft
+        if (keyH.leftPressed && playerX > 0 && playerInAni == false) {
             playerFacingDirection = -1;
 
             if (keyH.dashPressed && Skills.performDash()) {
@@ -639,7 +693,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             moveHorizontally(-(playerSpeed + (int) dashVelocityX));
         } 
-        else if (keyH.rightPressed) {
+        else if (keyH.rightPressed && playerInAni == false) {
             playerFacingDirection = 1;
 
             if (keyH.dashPressed && Skills.performDash()) {
@@ -648,6 +702,8 @@ public class GamePanel extends JPanel implements Runnable {
             }
             moveHorizontally(playerSpeed + (int) dashVelocityX);
         }
+        
+        
 
         if (isGrounded) {
         	gravity = 0;
@@ -667,47 +723,69 @@ public class GamePanel extends JPanel implements Runnable {
         velocityY += gravity;
         playerY += velocityY;
         isGrounded = false; 
+        
+        if (ridingStone != null) {   // NEU
+            isGrounded = true;
+            velocityY = 0;
+        }
 
         if (dashVelocityX > 0) {
             directionImg = playerDashImg;
         } else if (keyH.leftPressed) {
-            directionImg = playerImgLeft;
+            directionImg =  PlayerWalkingAnimation.walkingLeft();               // //playerImgLeft;
         } else if (keyH.rightPressed) {
-            directionImg = playerImgRight;
-        } else {
+            directionImg =  PlayerWalkingAnimation.walkingRight();   // playerImgRight;
+            // Hier weiter 1
+        }else if (playerFacingDirection == 1 && keyH.shotPressed && shootCooldown <=0){
+        	fireballAniRight = true;
+        	playerInAni = true;
+        }else if (playerFacingDirection == 0 && keyH.shotPressed && shootCooldown <=0){
+            	fireballAniLeft = true;
+            	playerInAni = true;
+        }else {
             directionImg = playerImg; 
         }
         
+        // Animationen aufrufen
+        if(playerInAni) {
+        	if(fireballAniRight) {
+        		directionImg = PlayerWalkingAnimation.castingFireballRight();
+        	}
+        	if(fireballAniLeft) {
+        		directionImg = PlayerWalkingAnimation.castingFireballLeft();
+        	}
+        	
+        	AniTimer --;
+        	if(AniTimer <= 0) {
+        	playerInAni = false;
+        	AniTimer = 30;
+        	
+        }
+        }
 
         	
-        Rectangle playerBounds = getPlayerBounds();
+        Rectangle playerBounds = new Rectangle(playerX, playerY, playerSize, playerSize + 1); // versuch mit ( + werte) um zu schauen ob die Kolision fürs mitfahren so augrunfd der Toleranz verbessert wird
         for (Platform p : platforms) {
             Rectangle pBounds = p.getBounds();
             if (playerBounds.intersects(pBounds)) {
-                if (velocityY > 0 && (playerY + tileSize - velocityY) <= p.y) {
-                    playerY = p.y - tileSize; 
+                if (velocityY >= 0 && (playerY + playerSize - velocityY) <= p.y) {
+                    playerY = p.y - playerSize;
                     isGrounded = true;
                     velocityY = 0;
                 }
                 if (isGrounded) {
                     if (p instanceof AvoidingPlatform) {
                         moveHorizontally(((AvoidingPlatform) p).speed);
-                    } else if (p instanceof MovingPlatform ) {
+                    } else if (p instanceof MovingPlatform) {
                         moveHorizontally(((MovingPlatform) p).speed);
-                    }else if (p instanceof VPlatform) {
-                    	((VPlatform) p).isPlayerStandingOn = true;
-                    } }else if (p instanceof SmashingP) {
-                    	// Hier weiter machen fehler beheben
-                    	if(playerY >= p.y) {
-                    		playerY = p.y - tileSize;
-                    	}
-                    	
-                    	
+                    } else if (p instanceof VPlatform) {
+                        ((VPlatform) p).isPlayerStandingOn = true;
+                    }
                 }
             }
         }
 
-        if (playerY >= screenHeight - tileSize) {
+        if (playerY >= screenHeight - playerSize) {
             respawnOnNextPlatformLeft();
             msg.showFloatingMessage("DU BIST KACKE");
             fallen_multiplier ++;
@@ -725,13 +803,13 @@ public class GamePanel extends JPanel implements Runnable {
             isGrounded = false;
         }
 
-        cameraX = playerX - (screenWidth / 2) + (tileSize / 2);
+        cameraX = playerX - (screenWidth / 2) + (playerSize / 2);
         if (cameraX < 0) {
             cameraX = 0;
         }
 
-        double playerCenterX = playerX + (tileSize / 2.0);
-        double playerCenterY = playerY + (tileSize / 2.0);
+        double playerCenterX = playerX + (playerSize / 2.0);
+        double playerCenterY = playerY + (playerSize / 2.0);
 
         for (Ball bullet : bullets) {
             bullet.update(playerCenterX, playerCenterY);
@@ -749,15 +827,15 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         if (keyH.shotPressed && shootCooldown == 0) {
-            int bulletX = (playerFacingDirection == 1) ? playerX + tileSize : playerX - 10;
-            int bulletY = playerY + (tileSize / 2) - 5;
+            int bulletX = (playerFacingDirection == 1) ? playerX + playerSize : playerX - 10;
+            int bulletY = playerY + (playerSize / 2) - 5;
             playerBullets.add(new Shot(bulletX, bulletY, playerFacingDirection));
             shootCooldown = SHOOT_DELAY;
             playHit("/fireBall.wav"); 
         }
 
         if (keyH.swordPressed && shootCooldown == 0) {
-            int swordX = (playerFacingDirection == 1) ? playerX + tileSize : playerX - 16;
+            int swordX = (playerFacingDirection == 1) ? playerX + playerSize : playerX - 16;
             int swordY = playerY;
             playerSword.add(new Sword(swordX, swordY));
             playHit("/slash-sword.wav");
@@ -862,6 +940,7 @@ public class GamePanel extends JPanel implements Runnable {
         	playHit("/gameOver.wav");
             gameState = gameOverState;
         }
+    	}
     }
     public void respawnOnNextPlatformLeft() {
         Platform targetPlatform = null;
@@ -876,8 +955,8 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
         if (targetPlatform != null) {
-            playerX = (targetPlatform.x + targetPlatform.width) - tileSize - 20;
-            playerY = targetPlatform.y - tileSize - 10;
+            playerX = (targetPlatform.x + targetPlatform.width) - playerSize - 20;
+            playerY = targetPlatform.y - playerSize - 10;
         } else {
             playerX = 100;
             playerY = 100;
@@ -955,10 +1034,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         if (directionImg != null) {
-            g2.drawImage(directionImg, playerX, playerY, tileSize, tileSize, null);
+            g2.drawImage(directionImg, playerX, playerY, playerSize, playerSize, null);
         } else {
             g2.setColor(java.awt.Color.WHITE);
-            g2.fillRect(playerX, playerY, tileSize, tileSize);
+            g2.fillRect(playerX, playerY, playerSize, playerSize);
         }
 
         for(Hook gh : grabHook) {
@@ -969,7 +1048,7 @@ public class GamePanel extends JPanel implements Runnable {
         	ge.draw(g2);
         }
 
-        msg.drawFloating(g2, playerX, playerY, tileSize,fallen_multiplier);
+        msg.drawFloating(g2, playerX, playerY, playerSize,fallen_multiplier);
         for (Shot pb : playerBullets) {
             pb.draw1(g2);
         }
@@ -982,6 +1061,9 @@ public class GamePanel extends JPanel implements Runnable {
         for (Sword sw : playerSword) {
             sw.draw1(g2);
         }
+        
+        for (Lava l : lava) l.draw(g2);
+        for (LavaFireball f : lavaSparks) f.draw(g2);
 
         g2.translate(cameraX, 0);
         
