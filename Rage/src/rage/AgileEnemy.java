@@ -24,7 +24,7 @@ public class AgileEnemy {
 	Color color ; // für farbwechsel vor dem einbauen von animationen
 	Rectangle att;
 	int health;
-	int maxHealt = 30;
+	int maxHealt = 10;
 	int healthBarWidth = 2;
 	int healthBarHeight = 10;
 

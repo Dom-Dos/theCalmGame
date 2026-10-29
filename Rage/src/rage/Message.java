@@ -52,16 +52,19 @@ public class Message {
     }
     
    public String[] options =  new String[] {
-    		"Controls",
-    		"Sound options-Not Available",
-    		"Start Game"
+		   "Start Game",
+		   "Controls",
+		   "Sound options-Not Available",
+		   "End game"		
+    		
     };
     
     public String[] levels =  new String[] {
 			"Level 1",
 			"Level 2",
 			"Level 3",
-			"Level 4"
+			"Level 4",
+			"Level 5"
 	};
 
     public void Center(Graphics2D g2, String text, int y, Font font, Color color, boolean drawBackground) {

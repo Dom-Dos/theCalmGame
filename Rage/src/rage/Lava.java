@@ -38,7 +38,7 @@ public class Lava {
 	        default:     target = stage3; break;
 	    }
 
-	    if (y <= target) {                 // war: y >= target
+	    if (y <= target) {                
 	        counter++;
 	        if (counter >= 100) {
 	            counter = 0;
@@ -46,12 +46,12 @@ public class Lava {
 	            else if (current == LavaState.STAGE2) current = LavaState.STAGE3;
 	        }
 	    } else {
-	        y += speed;                    // speed ist durch den Konstruktor negativ
+	        y += speed;                    
 	    }
 
 	    sparkTimer++;
-	    if (sparkTimer % 20 == 0) {
-	        int fx = (int) (GamePanel.playerX + Math.random() * 500);
+	    if (sparkTimer % 90 == 0) {
+	        int fx = (int) (GamePanel.playerX + Math.random() * 1000);
 	        GamePanel.lavaSparks.add(new LavaFireball(fx, y));
 	    }
 	}

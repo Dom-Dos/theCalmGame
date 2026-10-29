@@ -21,7 +21,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int keyBindState = 4;
     public final int levelSelectState = 5;
 
-    public int maxHealth = 20;
+    public int maxHealth = 60;
     public int currentHealth = maxHealth;
 
     private long playTimeMs = 0;
@@ -97,6 +97,9 @@ public class GamePanel extends JPanel implements Runnable {
     String lastFaced = "right";
 
     int cameraX = 0;
+    int cameraY;
+    boolean yCameraLocked = false;
+    
     boolean jumpScare = false;
     double velocityY = 0;
     double dashVelocityX = 0;
@@ -132,6 +135,9 @@ public class GamePanel extends JPanel implements Runnable {
     ArrayList<AgileEnemy> aEnemys = new ArrayList <>();
     public static ArrayList<ProjectileAE> aep = new ArrayList <>();
     
+    static ArrayList<Explosion> explosions = new ArrayList <>();
+    static ArrayList<Boss1> bosses = new ArrayList <>();
+    
     
     ArrayList<Lava> lava = new ArrayList <>();
      public static ArrayList<LavaFireball> lavaSparks = new ArrayList <>();
@@ -156,7 +162,7 @@ public class GamePanel extends JPanel implements Runnable {
         backgroundImg = ResourceLoader.loadImage("/BGP1.jpg");
         playerDashImg = ResourceLoader.loadImage("/dash.png");
         cutsceneGif = new javax.swing.ImageIcon(getClass().getResource("/fearGif.gif")).getImage();
-        loadLevel(currentLevel);
+        
         playMusic("/BG_Music.wav");
     }
     public void loadLevel(int level) {
@@ -175,8 +181,8 @@ public class GamePanel extends JPanel implements Runnable {
         playerX = 100;
         playerY = 100;
         velocityY = 0;
-
-    
+        
+        
         if (level == 1) {
 
             platforms.add(new Platform(0, 500, 600, 30, 0));
@@ -324,14 +330,46 @@ public class GamePanel extends JPanel implements Runnable {
             aEnemys.add(new AgileEnemy(950, 300, 30, 60)); 
             
             }else if (level == 4) {
-            	
+            	yCameraLocked = true;
             	platforms.add(new Platform(0, 500, 600, 30, 0));
                 platforms.add(new Platform(700, 420, 200, 20, 0));
                 platforms.add(new Platform(1000, 350, 150, 20, 0));
-                lava.add(new Lava(1, 450, 300, 150, 600, 0));
+                
+                platforms.add(new Platform(800, 280, 150, 20, 0));
+                platforms.add(new Platform(550, 210, 140, 20, 0));
+                platforms.add(new Platform(300, 140, 140, 20, 0));
+                platforms.add(new Platform(100, 70, 130, 20, 0));
+                platforms.add(new Platform(300, 0, 150, 20, 0));
+                platforms.add(new Platform(500, -70, 140, 20, 0));
+                platforms.add(new Platform(750, -140, 130, 20, 0));
+                platforms.add(new Platform(600, -210, 120, 20, 0));
+                platforms.add(new Platform(350, -280, 130, 20, 0));
+                platforms.add(new Platform(150, -350, 150, 20, 0));
+                
+                
+                lava.add(new Lava(1, 600, 300, -340, 700, 0));
             	
             	
             	
+            }else if (level ==5) {
+            	// ==================== ARENA-BEGRENZUNG ====================
+                // 1. Boden (Breite: 1200)
+                platforms.add(new Platform(0, 500, 1200, 50, 0));
+                
+                // 2. Linke Wand (Verhindert Flucht nach links)
+                platforms.add(new Platform(0, 100, 40, 400, 0));
+                
+                // 3. Rechte Wand (Verhindert Flucht nach rechts)
+                platforms.add(new Platform(1160, 100, 40, 400, 0));
+                
+                // 4. Decke (Verhindert Drüberspringen/Dash nach oben)
+                platforms.add(new Platform(0, 0, 1200, 40, 0));
+
+                // ==================== PLATTMASCHINEN / PLATTFORMEN IN DER ARENA ====================
+                // Kleine Plattformen in der Mitte für vertikales Ausweichen
+                platforms.add(new Platform(300, 380, 150, 20, 0));
+                platforms.add(new Platform(750, 380, 150, 20, 0));
+                bosses.add(new Boss1(100, 90, 45, 40, 1160/2,380));
             }
     }    
     public static int getPlayerX() {
@@ -380,6 +418,9 @@ public class GamePanel extends JPanel implements Runnable {
 
             Rectangle playerBounds = getPlayerBounds();
             for (Platform p : platforms) {
+            	if (p.getClass() == Platform.class) {
+            		continue;
+            	}
                 if (blocksHorizontalMovement(playerBounds, p.getBounds())) {
                     playerX -= step;
                     dashVelocityX = 0;
@@ -409,10 +450,9 @@ public class GamePanel extends JPanel implements Runnable {
         currentHealth--;
         playHit("/scream2.wav");
         playerDmgTimer = 60; 
-        delayGame = 30;
         return true;
     }
-    public int delayGame = 60;
+
     @Override
     public void run() {
     	
@@ -431,17 +471,11 @@ public class GamePanel extends JPanel implements Runnable {
                 update();
                 repaint();
                 delta--;
-                delayGame --;
-           	 if (delayGame <= 0) {
-                	FPS = 60;
-                }else if (delayGame > 0) {
-                	
-                	FPS = 30;
-                	//System.out.println("Delay");
+            
                 }
             }
         }
-    }
+    
 
     public static int getDir() {
     	return playerFacingDirection;
@@ -479,7 +513,8 @@ public class GamePanel extends JPanel implements Runnable {
     	        if (gameState == gameOverState) {
             if (keyH.restartPressed) {
             	playHit("/restart.wav");
-                resetGame();
+            	resetGame();
+                loadLevel(currentLevel);
             }
             return;
         }
@@ -498,9 +533,10 @@ public class GamePanel extends JPanel implements Runnable {
     	            if (keyH.menuContinue && delayMenuButtons <= 0) {
     	                delayMenuButtons = 15;
     	                switch (highlightMenu) {
-    	                    case 1: gameState = keyBindState; break;
-    	                    case 2: System.out.println("Noch nicht verfügbar"); break;
-    	                    case 3: gameState = levelSelectState; highlightMenu = 1; break;
+    	                	case 4: System.exit(0); break;
+    	                    case 2: gameState = keyBindState; break;
+    	                    case 3: System.out.println("Noch nicht verfügbar"); break;
+    	                    case 1: gameState = levelSelectState; highlightMenu = 1; break;
     	                }
     	            }
     	            return;
@@ -571,7 +607,7 @@ public class GamePanel extends JPanel implements Runnable {
                     playerY = l.y - playerSize;
                     velocityY = jumpStrength;
                     isGrounded = false;
-                    // weiter
+                
                 }
             }
 
@@ -584,7 +620,21 @@ public class GamePanel extends JPanel implements Runnable {
                     playerTookDamage();
                    
                 }
-            }      
+            }
+            for (int i = bosses.size() - 1; i >= 0; i--) {
+                Boss1 b = bosses.get(i);
+                b.update();                         
+            }
+                
+                
+            for (int i = explosions.size() - 1; i >= 0; i--) {
+                Explosion ex = explosions.get(i);
+                ex.update();                         
+            }
+            
+    	
+            
+
             
            
             if (shootCooldown > 0) {
@@ -822,7 +872,7 @@ public class GamePanel extends JPanel implements Runnable {
         if (cameraX < 0) {
             cameraX = 0;
         }
-
+        cameraY = playerY - (screenHeight / 2) + (playerSize / 2);
         double playerCenterX = playerX + (playerSize / 2.0);
         double playerCenterY = playerY + (playerSize / 2.0);
 
@@ -988,6 +1038,16 @@ public class GamePanel extends JPanel implements Runnable {
         fallen_multiplier = 1;
         currentHealth = maxHealth;
         playTimeMs = 0;
+        // reset all entities
+        platforms.clear();
+        spikes.clear();
+        gEnemy.clear();
+    	aEnemys.clear();
+    	lava.clear();
+    	lavaSparks.clear();
+    	bullets.clear();
+    	aep.clear();
+    	
       
      
         for (Ball bullet : bullets) {
@@ -1030,8 +1090,12 @@ public class GamePanel extends JPanel implements Runnable {
             }
             g2.translate(bgCameraX, 0);
         }
-
-        g2.translate(-cameraX, 0);
+        if(yCameraLocked) {
+        	 g2.translate(-cameraX, -cameraY);
+        }else{
+        	g2.translate(-cameraX, 0);
+        }
+        
         for(SpikeTraps spike: spikes) {
         	spike.draw(g2);
         }
@@ -1055,6 +1119,14 @@ public class GamePanel extends JPanel implements Runnable {
             g2.setColor(java.awt.Color.WHITE);
             g2.fillRect(playerX, playerY, playerSize, playerSize);
         }
+        
+        for (Boss1 b : bosses) {
+			b.draw(g2);
+            }
+        for (Explosion ex : explosions) {
+			ex.draw(g2);
+            }
+        
 
         for(Hook gh : grabHook) {
         	gh.draw(g2);
@@ -1080,8 +1152,12 @@ public class GamePanel extends JPanel implements Runnable {
         
         for (Lava l : lava) l.draw(g2);
         for (LavaFireball f : lavaSparks) f.draw(g2);
-
-        g2.translate(cameraX, 0);
+        if (yCameraLocked) {
+			g2.translate(cameraX, cameraY);
+        }else {
+				  g2.translate(cameraX, 0);
+			}
+      
         
         drawPlayTime(g2);
         
